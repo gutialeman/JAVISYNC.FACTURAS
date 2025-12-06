@@ -1,288 +1,348 @@
-// --- CONFIGURACIÓN GLOBAL ---
+// ===============================
+//  APP.JS CORREGIDO COMPLETO
+// ===============================
+
+/* --- CONFIGURACIÓN GLOBAL --- */
 const IVA_RATE = 0.15;
 let productsList = [];
+let invoiceCounter = 1; // contador de facturas automático
 const formatter = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
+  style: 'currency',
+  currency: 'USD',
 });
 
+/* --- CONSTANTES DEL BACKEND --- */
+const API_BASE_URL = 'http://localhost:3000';
+
+/* --- MODELO --- */
 class Producto {
-    constructor(nombre, cantidad, precio) {
-        this.nombre = nombre;
-        this.cantidad = parseFloat(cantidad);
-        this.precioUnitario = parseFloat(precio);
-        this.total = this.cantidad * this.precioUnitario;
-    }
+  constructor(nombre, cantidad, precio) {
+    this.nombre = nombre;
+    this.cantidad = parseFloat(cantidad) || 0;
+    this.precioUnitario = parseFloat(precio) || 0;
+    this.total = this.cantidad * this.precioUnitario;
+  }
 }
 
-// *******************************************************************
-// 1. LÓGICA DE AUTENTICACIÓN
-// *******************************************************************
-
+/* ===============================
+   1. AUTENTICACIÓN (LOGIN / LOGOUT)
+   =============================== */
 function checkAuthentication() {
-    if (window.location.pathname.endsWith('facturacion.html') &&
-        sessionStorage.getItem('isLoggedIn') !== 'true') {
-        window.location.href = 'login.html';
-    }
+  if (window.location.pathname.includes('facturacion.html') &&
+      sessionStorage.getItem('isLoggedIn') !== 'true') {
+    window.location.href = 'login.html';
+  }
 }
 
 function handleLogin() {
-    const form = document.getElementById('login-form');
-    if (!form) return;
+  const form = document.getElementById('login-form');
+  if (!form) return;
 
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        const errorMsg = document.getElementById('login-error');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-        // Credenciales de prueba
-        if (username === 'admin' && password === '123') {
-            sessionStorage.setItem('isLoggedIn', 'true');
-            window.location.href = 'facturacion.html';
+    const username = (document.getElementById('username')?.value || '').trim();
+    const password = (document.getElementById('password')?.value || '').trim();
+    const errorMsg = document.getElementById('login-error');
+
+    if (errorMsg) {
+      errorMsg.textContent = '';
+      errorMsg.style.display = 'none';
+    }
+
+    if (!username || !password) {
+      if (errorMsg) {
+        errorMsg.textContent = 'Por favor, completa todos los campos.';
+        errorMsg.style.display = 'block';
+      }
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/iniciar-sesion`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre: username, contraseña: password })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        sessionStorage.setItem('isLoggedIn', 'true');
+        sessionStorage.setItem('userName', data.nombre || username);
+        window.location.href = 'facturacion.html';
+      } else {
+        if (errorMsg) {
+          errorMsg.textContent = data.error || 'Usuario o contraseña incorrectos.';
+          errorMsg.style.display = 'block';
         } else {
-            errorMsg.textContent = 'Usuario o contraseña incorrectos.';
-            errorMsg.style.display = 'block';
+          alert(data.error || 'Usuario o contraseña incorrectos.');
         }
-    });
+      }
+    } catch (err) {
+      console.error('Error conexión:', err);
+      if (errorMsg) {
+        errorMsg.textContent = 'Error al conectar con el servidor.';
+        errorMsg.style.display = 'block';
+      } else {
+        alert('Error al conectar con el servidor.');
+      }
+    }
+  });
 }
 
 function handleLogout() {
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-            sessionStorage.removeItem('isLoggedIn');
-            window.location.href = 'login.html';
-        });
-    }
+  const logoutBtn = document.getElementById('logout-btn');
+  if (!logoutBtn) return;
+  logoutBtn.addEventListener('click', () => {
+    sessionStorage.clear();
+    window.location.href = 'login.html';
+  });
 }
 
-// *******************************************************************
-// 2. LÓGICA DE FACTURACIÓN
-// *******************************************************************
-
+/* ===============================
+   2. LÓGICA DE FACTURACIÓN
+   =============================== */
 function recalculateSummary() {
-    let subtotal = productsList.reduce((sum, item) => sum + item.total, 0);
-    let iva = subtotal * IVA_RATE;
-    let total = subtotal + iva;
+  const subtotal = productsList.reduce((sum, p) => sum + (p.total || 0), 0);
+  const iva = subtotal * IVA_RATE;
+  const total = subtotal + iva;
 
-    document.getElementById('subtotal-val').textContent = formatter.format(subtotal);
-    document.getElementById('iva-val').textContent = formatter.format(iva);
-    document.getElementById('total-val').textContent = formatter.format(total);
+  const subtotalEl = document.getElementById('subtotal-val');
+  const ivaEl = document.getElementById('iva-val');
+  const totalEl = document.getElementById('total-val');
+
+  if (subtotalEl) subtotalEl.textContent = formatter.format(subtotal);
+  if (ivaEl) ivaEl.textContent = formatter.format(iva);
+  if (totalEl) totalEl.textContent = formatter.format(total);
 }
 
 function renderProductDetail() {
-    const tableBody = document.getElementById('products-detail');
-    if (!tableBody) return;
+  const tableBody = document.getElementById('products-detail');
+  if (!tableBody) return;
 
-    tableBody.innerHTML = '';
+  tableBody.innerHTML = '';
 
-    productsList.forEach((product, index) => {
-        const row = tableBody.insertRow();
-        row.innerHTML = `
-            <td>${product.nombre}</td>
-            <td>${product.cantidad}</td>
-            <td>${formatter.format(product.precioUnitario)}</td>
-            <td>${formatter.format(product.total)}</td>
-            <td><button class="btn-remove" data-index="${index}">X</button></td>
-        `;
-    });
+  productsList.forEach((p, i) => {
+    const row = tableBody.insertRow();
+    const cellNombre = row.insertCell();
+    const cellCant = row.insertCell();
+    const cellPU = row.insertCell();
+    const cellTotal = row.insertCell();
+    const cellAcc = row.insertCell();
 
-    recalculateSummary();
+    cellNombre.textContent = p.nombre;
+    cellCant.textContent = p.cantidad;
+    cellPU.textContent = formatter.format(p.precioUnitario);
+    cellTotal.textContent = formatter.format(p.total);
+    cellAcc.innerHTML = `<button class="btn-remove" data-index="${i}" aria-label="Eliminar producto ${p.nombre}">X</button>`;
+  });
 
-    document.querySelectorAll('.btn-remove').forEach(button => {
-        button.addEventListener('click', removeProduct);
-    });
+  recalculateSummary();
+
+  document.querySelectorAll('.btn-remove').forEach(btn => {
+    btn.onclick = removeProduct;
+  });
 }
 
 function handleAddProduct() {
-    const btn = document.getElementById('add-product-btn');
-    if (!btn) return;
+  const btn = document.getElementById('add-product-btn');
+  if (!btn) return;
 
-    btn.addEventListener('click', () => {
-        const nombre = document.getElementById('prodNombre').value.trim();
-        const cantidad = document.getElementById('prodCantidad').value;
-        const precio = document.getElementById('prodPrecio').value;
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const nombre = (document.getElementById('prodNombre')?.value || '').trim();
+    const cantidad = parseFloat(document.getElementById('prodCantidad')?.value) || 0;
+    const precio = parseFloat(document.getElementById('prodPrecio')?.value) || 0;
 
-        if (nombre && cantidad > 0 && precio > 0) {
-            productsList.push(new Producto(nombre, cantidad, precio));
-            renderProductDetail();
+    if (!nombre || cantidad <= 0 || precio <= 0) {
+      alert('Por favor ingresa nombre, cantidad (>0) y precio (>0).');
+      return;
+    }
 
-            document.getElementById('prodNombre').value = '';
-            document.getElementById('prodCantidad').value = '1';
-            document.getElementById('prodPrecio').value = '0.00';
-            document.getElementById('prodNombre').focus();
-        } else {
-            alert('Por favor, introduce datos válidos para el producto.');
-        }
-    });
+    productsList.push(new Producto(nombre, cantidad, precio));
+    renderProductDetail();
+
+    document.getElementById('prodNombre').value = '';
+    document.getElementById('prodCantidad').value = '1';
+    document.getElementById('prodPrecio').value = '0.00';
+    document.getElementById('prodNombre').focus();
+  });
 }
 
-function removeProduct(event) {
-    const index = event.target.getAttribute('data-index');
-    if (index !== null) {
-        productsList.splice(parseInt(index), 1);
-        renderProductDetail();
+function removeProduct(evt) {
+  const index = Number(evt.target?.dataset?.index);
+  if (!Number.isNaN(index)) {
+    productsList.splice(index, 1);
+    renderProductDetail();
+  }
+}
+
+function handleSaveInvoice() {
+  const saveBtn = document.getElementById('save-invoice-btn');
+  if (!saveBtn) return;
+
+  saveBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    alert('Factura guardada con éxito');
+
+    // Incrementar factura automáticamente
+    const numFacturaEl = document.getElementById('numFactura');
+    if (numFacturaEl) {
+      invoiceCounter++;
+      numFacturaEl.value = invoiceCounter;
     }
+
+    // LIMPIAR CAMPOS AUTOMÁTICAMENTE
+    document.getElementById('vendedorNombre').value = "";
+    document.getElementById('vendedorCargo').value = "";
+    document.getElementById('nombreCliente').value = "";
+    document.getElementById('identificacion').value = "";
+    document.getElementById('prodNombre').value = "";
+    document.getElementById('prodCantidad').value = "1";
+    document.getElementById('prodPrecio').value = "0.00";
+
+    productsList = [];
+    renderProductDetail();
+
+    const fechaEl = document.getElementById('fechaEmision');
+    if (fechaEl) fechaEl.valueAsDate = new Date();
+  });
 }
 
 function handlePrintInvoice() {
-    const printBtn = document.getElementById('print-invoice-btn');
-    if (printBtn) {
-        printBtn.addEventListener('click', () => {
-            alert('Imprimiendo Factura... (Simulación)');
-        });
-    }
+  const printBtn = document.getElementById('print-invoice-btn');
+  if (!printBtn) return;
+  printBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.print();
+  });
 }
 
-// *******************************************************************
-// 3. EFECTO DE MOUSE Y ANIMACIONES
-// *******************************************************************
+/* ===============================
+   3. HORA AUTOMÁTICA EN EMPLEADO
+   =============================== */
+function updateClock() {
+  const hourEl = document.getElementById('vendedorHora'); // ← CORREGIDO
 
-function setupMouseInteraction(cardId) {
-    const card = document.getElementById(cardId);
-    const interactionArea = document.querySelector('.login-body-content');
+  if (!hourEl) return;
 
-    if (!interactionArea || !card) return;
+  const now = new Date();
+  let hours = now.getHours();
+  const minutes = now.getMinutes();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12;
 
-    interactionArea.onmousemove = (e) => {
-        if (card.classList.contains('hidden')) return;
-
-        const rect = interactionArea.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-
-        const deltaX = e.clientX - centerX;
-        const deltaY = e.clientY - centerY;
-
-        const intensity = 70;
-        const rotateX = deltaY / intensity;
-        const rotateY = -deltaX / intensity;
-
-        card.style.transform =
-            `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
-
-        const shadowX = -deltaY / 30;
-        const shadowY = deltaX / 30;
-
-        card.style.boxShadow =
-            `${shadowX}px ${shadowY}px 30px rgba(0,0,0,0.6), 0 0 10px rgba(0,170,255,0.5)`;
-    };
-
-    interactionArea.onmouseleave = () => {
-        card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)';
-        card.style.boxShadow =
-            '0 10px 30px rgba(0,0,0,0.5), 0 0 10px rgba(0,170,255,0.5)';
-    };
+  hourEl.value = `${hours.toString().padStart(2, '0')}:${minutes
+    .toString()
+    .padStart(2, '0')} ${ampm}`;
 }
 
-function handleWelcomeScreen() {
-    const welcomeScreen = document.getElementById('welcome-screen');
-    const showLoginBtn = document.getElementById('show-login-btn');
-    const loginFormContainer = document.getElementById('login-container');
+setInterval(updateClock, 1000);
 
-    if (!showLoginBtn || !welcomeScreen || !loginFormContainer) return;
-
-    setupMouseInteraction('welcome-screen');
-
-    showLoginBtn.addEventListener('click', () => {
-        welcomeScreen.classList.add('hidden');
-
-        setTimeout(() => {
-            loginFormContainer.classList.remove('hidden');
-            setupMouseInteraction('login-container');
-        }, 300);
-    });
-}
-
-// *******************************************************************
-// 4. REGISTRO DE USUARIOS (FUNCIONAL)
-// *******************************************************************
-
+/* ===============================
+   4. REGISTRO DE USUARIOS
+   =============================== */
 function handleRegister() {
-    const registerForm = document.getElementById('register-form');
-    if (!registerForm) return;
+  const form = document.getElementById('register-form');
+  if (!form) return;
 
-    registerForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const name = document.getElementById('reg-name').value.trim();
-        const email = document.getElementById('reg-email').value.trim().toLowerCase();
-        const pass = document.getElementById('reg-pass').value;
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = (document.getElementById('reg-name')?.value || '').trim();
+    const pass = (document.getElementById('reg-pass')?.value || '').trim();
 
-        if (!name || !email || !pass) {
-            alert('Por favor completa todos los campos.');
-            return;
-        }
+    if (!name || !pass) {
+      alert('Completa todos los campos.');
+      return;
+    }
 
-        let users = JSON.parse(localStorage.getItem('users') || '[]');
+    try {
+      const response = await fetch(`${API_BASE_URL}/registrar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre: name, contraseña: pass })
+      });
 
-        if (users.some(u => u.email === email)) {
-            alert('Ya existe una cuenta con ese correo.');
-            return;
-        }
+      const data = await response.json();
 
-        users.push({ name, email, password: pass });
-        localStorage.setItem('users', JSON.stringify(users));
+      if (!response.ok) {
+        alert(`Error en registro: ${data.error || 'Nombre ya existe'}`);
+        return;
+      }
 
-        registerForm.reset();
-        document.getElementById('register-container').classList.add('hidden');
-        document.getElementById('welcome-screen').classList.remove('hidden');
+      alert('Registro exitoso. Ya podés iniciar sesión.');
+      form.reset();
 
-        const userField = document.getElementById('username');
-        if (userField) {
-            userField.value = email;
-            userField.focus();
-        }
-
-        alert('Registro exitoso. Ahora inicia sesión.');
-    });
+      document.getElementById('register-container')?.classList.add('hidden');
+      document.getElementById('login-container')?.classList.remove('hidden');
+      const userField = document.getElementById('username');
+      if (userField) {
+        userField.value = name;
+        userField.focus();
+      }
+    } catch (err) {
+      console.error('Error registrar:', err);
+      alert('No se pudo conectar con el servidor.');
+    }
+  });
 }
 
-// *******************************************************************
-// 5. INICIALIZACIÓN
-// *******************************************************************
-
+/* ===============================
+   5. INICIALIZACIÓN
+   =============================== */
 document.addEventListener('DOMContentLoaded', () => {
+  checkAuthentication();
 
-    checkAuthentication();
+  // Login
+  if (document.querySelector('.login-body-content')) {
+    handleLogin();
+    handleRegister();
 
-    // Página de LOGIN
-    if (document.querySelector('.login-body-content')) {
-
-        handleWelcomeScreen();
-        handleLogin();
-        handleRegister();
-
-        // Botón para abrir el registro
-        const showReg = document.getElementById("show-register-btn");
-        if (showReg) {
-            showReg.addEventListener("click", () => {
-                document.getElementById("welcome-screen").classList.add("hidden");
-                document.getElementById("login-container").classList.add("hidden");
-                document.getElementById("register-container").classList.remove("hidden");
-            });
-        }
-
-        // Botón cerrar registro
-        const closeReg = document.getElementById("close-register");
-        if (closeReg) {
-            closeReg.addEventListener("click", () => {
-                document.getElementById("register-container").classList.add("hidden");
-                document.getElementById("welcome-screen").classList.remove("hidden");
-            });
-        }
+    const showLoginBtn = document.getElementById('show-login-btn');
+    if (showLoginBtn) {
+      showLoginBtn.addEventListener('click', () => {
+        document.getElementById('welcome-screen')?.classList.add('hidden');
+        document.getElementById('register-container')?.classList.add('hidden');
+        document.getElementById('login-container')?.classList.remove('hidden');
+        document.getElementById('username')?.focus();
+      });
     }
 
-    // Página de FACTURACIÓN
-    else if (document.getElementById('products-detail')) {
+    document.getElementById('show-register-btn')?.addEventListener('click', () => {
+      document.getElementById('welcome-screen')?.classList.add('hidden');
+      document.getElementById('login-container')?.classList.add('hidden');
+      document.getElementById('register-container')?.classList.remove('hidden');
+    });
 
-        document.getElementById('fechaEmision').valueAsDate = new Date();
-        const randomNum = Math.floor(Math.random() * 9000) + 1000;
-        document.getElementById('numFactura').value = `001-2025-${randomNum}`;
+    document.getElementById('close-register')?.addEventListener('click', () => {
+      document.getElementById('register-container')?.classList.add('hidden');
+      document.getElementById('welcome-screen')?.classList.remove('hidden');
+    });
+  }
 
-        handleAddProduct();
-        handlePrintInvoice();
-        handleLogout();
-        renderProductDetail();
-    }
+  // Facturación
+  if (document.getElementById('products-detail')) {
+    const fechaEl = document.getElementById('fechaEmision');
+    if (fechaEl) fechaEl.valueAsDate = new Date();
+
+    const empresaEl = document.getElementById('empresaSesion');
+    if (empresaEl) empresaEl.value = sessionStorage.getItem('userName') || '';
+
+    const numFacturaEl = document.getElementById('numFactura');
+    if (numFacturaEl) numFacturaEl.value = invoiceCounter;
+
+    handleAddProduct();
+    handleSaveInvoice();
+    handlePrintInvoice();
+    handleLogout();
+
+    renderProductDetail();
+  }
+
+  updateClock();
 });
+
+
+

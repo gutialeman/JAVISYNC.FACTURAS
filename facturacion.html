@@ -28,7 +28,37 @@
         
         <h1 class="section-title">Detalles de la Factura</h1>
         
+        <!-- **************************************** -->
+        <!-- 1. DATOS DEL VENDEDOR -->
+        <!-- **************************************** -->
+        <div class="card mb-6"> 
+            <h2>Datos del Vendedor</h2>
+            <div class="grid-3-col-vendedor"> 
+                <div class="form-group">
+                    <label for="vendedorNombre">Vendedor (Nombre y Apellido):</label>
+                    <input type="text" id="vendedorNombre" required>
+                </div>
+                <div class="form-group">
+                    <label for="vendedorCargo">Cargo / Puesto:</label>
+                    <input type="text" id="vendedorCargo" required>
+                </div>
+                <div class="form-group">
+                    <label for="vendedorHora">Hora:</label>
+                    <input type="text" id="vendedorHora" readonly class="locked-input">
+                </div>
+                <div class="form-group">
+                    <label for="empresaSesion">Empresa:</label>
+                    <input type="text" id="empresaSesion" readonly class="locked-input">
+                </div>
+            </div>
+        </div>
+
+        <!-- **************************************** -->
+        <!-- 2. DATOS DEL CLIENTE Y FACTURA -->
+        <!-- **************************************** -->
         <div class="grid-2-col">
+
+            <!-- Tarjeta de Datos del Cliente -->
             <div class="card">
                 <h2>Datos del Cliente</h2>
                 <div class="form-group">
@@ -41,19 +71,22 @@
                 </div>
             </div>
 
+            <!-- Tarjeta de Datos de la Factura -->
             <div class="card">
                 <h2>Datos de la Factura</h2>
                 <div class="form-group">
                     <label for="numFactura">Nº Factura:</label>
-                    <input type="text" id="numFactura" required> 
+                    <input type="text" id="numFactura" readonly class="locked-input">
                 </div>
                 <div class="form-group">
                     <label for="fechaEmision">Fecha:</label>
                     <input type="date" id="fechaEmision" required>
                 </div>
             </div>
+
         </div>
 
+        <!-- Productos -->
         <div class="card product-input-section">
             <h2>Agregar Producto</h2>
             <div class="grid-4-col">
@@ -74,39 +107,38 @@
         </div>
         
         <div class="card">
-    <h2>Productos y Servicios</h2>
+            <h2>Productos y Servicios</h2>
 
-    <table class="invoice-table">
-        <thead>
-            <tr>
-                <th>Descripción</th>
-                <th>Cantidad</th>
-                <th>P. Unitario</th>
-                <th>Total</th>
-                <th>Acción</th>
-            </tr>
-        </thead>
+            <table class="invoice-table">
+                <thead>
+                    <tr>
+                        <th>Descripción</th>
+                        <th>Cantidad</th>
+                        <th>P. Unitario</th>
+                        <th>Total</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
 
-        <tbody id="products-detail">
-        </tbody> 
-    </table>
+                <tbody id="products-detail">
+                </tbody> 
+            </table>
 
-    <div class="invoice-summary">
-        <div class="summary-line">
-            <span>Subtotal:</span>
-            <span id="subtotal-val">C$0.00</span>
+            <div class="invoice-summary">
+                <div class="summary-line">
+                    <span>Subtotal:</span>
+                    <span id="subtotal-val">C$0.00</span>
+                </div>
+                <div class="summary-line">
+                    <span>IVA (15%):</span>
+                    <span id="iva-val">C$0.00</span>
+                </div>
+                <div class="total-line">
+                    <span>TOTAL:</span>
+                    <span id="total-val">C$0.00</span>
+                </div>
+            </div>
         </div>
-        <div class="summary-line">
-            <span>IVA (15%):</span>
-            <span id="iva-val">C$0.00</span>
-        </div>
-        <div class="total-line">
-            <span>TOTAL:</span>
-            <span id="total-val">C$0.00</span>
-        </div>
-    </div>
-</div>
-
 
         <div class="action-buttons">
             <button id="save-invoice-btn" class="btn btn-primary btn-large">Guardar Factura</button>
@@ -118,6 +150,6 @@
     </div>
     
     <script src="canvas-background.js"></script>
-    <script src="app.js"></script>
+    <script src="app.js"></script> 
 </body>
 </html>
