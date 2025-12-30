@@ -325,132 +325,166 @@ function handleRegister() {
     5. HORA AUTOMÁTICA EN EMPLEADO
     =============================== */
 function updateClock() {
-    const hourEl = document.getElementById('vendedorHora');
+  const hourEl = document.getElementById('vendedorHora');
+  if (!hourEl) return;
 
-    if (!hourEl) return;
+  const now = new Date();
+  let hours = now.getHours();
+  const minutes = now.getMinutes();
+  const seconds = now.getSeconds();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12;
 
-    const now = new Date();
-    let hours = now.getHours();
-    const minutes = now.getMinutes();
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-
-    hourEl.value = `${hours.toString().padStart(2, '0')}:${minutes
-        .toString()
-        .padStart(2, '0')} ${ampm}`;
+  hourEl.value = `${hours.toString().padStart(2, '0')}:${minutes
+    .toString()
+    .padStart(2, '0')}:${seconds.toString().padStart(2, '0')} ${ampm}`;
 }
+
+// Ejecuta cada segundo
+setInterval(updateClock, 1000);
+updateClock(); // Inicializa al cargar
+
 
 
 /* ===============================
     6. INICIALIZACIÓN
     =============================== */
 document.addEventListener('DOMContentLoaded', () => {
-    checkAuthentication();
-    updateClock(); // Inicia el reloj
-    setInterval(updateClock, 1000); // Mantiene el reloj actualizado
+  // Pantallas principales
+  const welcome = document.getElementById('welcome-screen');
+  const login = document.getElementById('login-container');
+  const register = document.getElementById('register-container');
 
-    // --- Lógica de Login (si estamos en la pantalla de acceso) ---
-    if (document.querySelector('.login-body-content')) {
-        handleLogin();
-        handleRegister();
+  const showLoginBtn = document.getElementById('show-login-btn');
+  const showRegisterBtn = document.getElementById('show-register-btn');
 
-        const showLoginBtn = document.getElementById('show-login-btn');
-        const showRegisterBtn = document.getElementById('show-register-btn');
-        const settingsBtn = document.getElementById('settings-btn');
-        const settingsMenu = document.getElementById('settings-menu');
-        const infoBtn = document.getElementById('info-btn');
-        const infoModal = document.getElementById('info-modal');
-        const toggleThemeBtn = document.getElementById('toggle-theme-btn');
-        const forgotPasswordLink = document.getElementById('forgot-password-link');
-        const recoveryModal = document.getElementById('recovery-modal');
-        const recoveryForm = document.getElementById('recovery-form');
-        const recoveryMessage = document.getElementById('recovery-message');
+  // Menú de Ajustes
+  const settingsBtn = document.getElementById('settings-btn');
+  const settingsMenu = document.getElementById('settings-menu');
+  const infoBtn = document.getElementById('info-btn');
 
+  // Modales
+  const infoModal = document.getElementById('info-modal');
+  const recoveryModal = document.getElementById('recovery-modal');
+  const forgotPasswordLink = document.getElementById('forgot-password-link');
 
-        // Transición de Pantallas
-        showLoginBtn?.addEventListener('click', () => showCard('login-container'));
-        showRegisterBtn?.addEventListener('click', () => showCard('register-container'));
+  // Cerrar modales (botones con .close-modal)
+  const closeButtons = document.querySelectorAll('.close-modal');
 
-        // Toggle Contraseña
-        document.querySelectorAll('.toggle-password').forEach(span => {
-            span.addEventListener('click', togglePassword);
-        });
+  // Utilidades de visibilidad (consistentes)
+  const showFlex = (el) => {
+    el.classList.remove('hidden');
+    el.style.display = 'flex';
+  };
 
-        // Toggle Menú de Ajustes
-        settingsBtn?.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (settingsMenu) {
-                 settingsMenu.style.display = settingsMenu.style.display === 'flex' ? 'none' : 'flex';
-            }
-        });
+  const hideEl = (el) => {
+    el.style.display = 'none';
+    el.classList.add('hidden');
+  };
 
-        // Cierra el menú al hacer clic fuera
-        window.addEventListener('click', () => {
-            if (settingsMenu) settingsMenu.style.display = 'none';
-        });
-        settingsMenu?.addEventListener('click', (e) => e.stopPropagation()); 
-        
-        // Modal de Información
-        infoBtn?.addEventListener('click', () => {
-            if (infoModal) infoModal.style.display = 'flex';
-            if (settingsMenu) settingsMenu.style.display = 'none';
-        });
-        infoModal?.querySelector('.close-modal')?.addEventListener('click', () => {
-            if (infoModal) infoModal.style.display = 'none';
-        });
-        infoModal?.addEventListener('click', (e) => {
-            if (e.target === infoModal) infoModal.style.display = 'none';
-        });
+  const showBlock = (el) => {
+    el.classList.remove('hidden');
+    el.style.display = 'block';
+  };
 
+  // Navegación: Bienvenida -> Login / Registro
+  if (showLoginBtn) {
+    showLoginBtn.addEventListener('click', () => {
+      welcome.classList.add('hidden');
+      welcome.style.display = 'none';
+      showBlock(login);
+    });
+  }
 
-        // Toggle Modo Oscuro/Claro
-        toggleThemeBtn?.addEventListener('click', () => {
-            document.body.classList.toggle('light-mode');
-            if (settingsMenu) settingsMenu.style.display = 'none';
-        });
-        
-        // Modal de Recuperación (Abre)
-        forgotPasswordLink?.addEventListener('click', (e) => {
-            e.preventDefault();
-            if (recoveryModal) recoveryModal.style.display = 'flex';
-        });
+  if (showRegisterBtn) {
+    showRegisterBtn.addEventListener('click', () => {
+      welcome.classList.add('hidden');
+      welcome.style.display = 'none';
+      showBlock(register);
+    });
+  }
 
-        // Modal de Recuperación (Cierra)
-        recoveryModal?.querySelector('.recovery-close-btn')?.addEventListener('click', () => {
-            if (recoveryModal) recoveryModal.style.display = 'none';
-        });
-        recoveryModal?.addEventListener('click', (e) => {
-            if (e.target === recoveryModal) recoveryModal.style.display = 'none';
-        });
-        
-        // Simulación del Formulario de Recuperación
-        recoveryForm?.addEventListener('submit', (e) => {
-            e.preventDefault();
-            if (recoveryMessage) {
-                recoveryMessage.style.display = 'block';
-                recoveryMessage.style.color = '#00ff00';
-                recoveryMessage.textContent = 'Enlace de recuperación enviado (simulación).';
-            }
-            
-            setTimeout(() => {
-                if (recoveryModal) recoveryModal.style.display = 'none';
-                recoveryForm.reset();
-                if (recoveryMessage) recoveryMessage.style.display = 'none';
-            }, 3000);
-        });
-        
-        // Simulación de Login (para evitar errores en la consola)
-        document.getElementById('login-form')?.addEventListener('submit', (e) => {
-            // Nota: Este listener se ejecuta antes de handleLogin()
-            const errorDiv = document.getElementById('login-error');
-            if (errorDiv) {
-                errorDiv.textContent = "Simulación: Intento de ingreso. (Ver consola para info de API)";
-                errorDiv.style.color = '#00c6ff';
-                errorDiv.style.display = 'block';
-            }
-        });
+  // Función global irAtras (si la llamas desde HTML)
+  window.irAtras = function () {
+    hideEl(login);
+    hideEl(register);
+    showBlock(welcome);
+  };
+
+  // Menú de Ajustes (toggle)
+  if (settingsBtn && settingsMenu) {
+    settingsBtn.addEventListener('click', () => {
+      const visible = settingsMenu.style.display === 'flex';
+      settingsMenu.style.display = visible ? 'none' : 'flex';
+    });
+
+    // Cerrar menú si se hace clic fuera
+    document.addEventListener('click', (e) => {
+      if (
+        settingsMenu.style.display === 'flex' &&
+        !settingsMenu.contains(e.target) &&
+        e.target !== settingsBtn
+      ) {
+        settingsMenu.style.display = 'none';
+      }
+    });
+  }
+
+  // Abrir modal de Información
+  if (infoBtn && infoModal) {
+    infoBtn.addEventListener('click', () => showFlex(infoModal));
+  }
+
+  // Abrir modal de Recuperación
+  if (forgotPasswordLink && recoveryModal) {
+    forgotPasswordLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      showFlex(recoveryModal);
+    });
+  }
+
+  // Cerrar modales con botones .close-modal
+  closeButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const modal = btn.closest('.modal');
+      if (modal) hideEl(modal);
+    });
+  });
+
+  // Cerrar modal al hacer clic en overlay (fuera del contenido)
+  [infoModal, recoveryModal].forEach((modal) => {
+    if (!modal) return;
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) hideEl(modal);
+    });
+  });
+
+  // Cerrar modales con Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      [infoModal, recoveryModal].forEach((modal) => {
+        if (modal && modal.style.display === 'flex') hideEl(modal);
+      });
+      // También cierra el menú de ajustes
+      if (settingsMenu && settingsMenu.style.display === 'flex') {
+        settingsMenu.style.display = 'none';
+      }
     }
+  });
+
+  // Toggle de visibilidad de contraseña (ojito)
+document.querySelectorAll('.toggle-password').forEach((eye) => {
+  const targetId = eye.getAttribute('data-target');
+  const input = document.getElementById(targetId);
+  if (!input) return;
+
+  eye.addEventListener('click', () => {
+    input.type = input.type === 'password' ? 'text' : 'password';
+  });
+});
+  });
+    
 
     // --- Lógica de Facturación (si estamos en la pantalla de facturación) ---
     if (document.getElementById('products-detail')) {
@@ -470,7 +504,88 @@ document.addEventListener('DOMContentLoaded', () => {
 
         renderProductDetail();
     }
+    const infoBtn = document.getElementById('info-btn');
+const infoModal = document.getElementById('info-modal');
+const settingsMenu = document.getElementById('settings-menu');
+
+if (infoBtn && infoModal) {
+  infoBtn.addEventListener('click', () => {
+    // Oculta el menú de ajustes
+    if (settingsMenu) settingsMenu.style.display = 'none';
+
+    // Muestra el modal de información
+    infoModal.classList.remove('hidden');
+    infoModal.style.display = 'flex';
+  });
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const loginForm = document.getElementById('login-form');
+
+  if (loginForm) {
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const user = document.getElementById('username')?.value.trim();
+      const pass = document.getElementById('password')?.value.trim();
+
+      // Validación básica
+      if (!user || !pass) {
+        alert("Por favor ingresa usuario y contraseña.");
+        return;
+      }
+
+      // Aquí podrías validar contra tu backend o datos guardados
+      // Si todo está correcto, redirige a la pantalla de facturación
+      sessionStorage.setItem('userName', user);
+      window.location.href = "facturacion.html";
+    });
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+  const logoutBtn = document.getElementById('logout-btn');
+
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      // Regresa al login
+      window.location.href = "login.html";
+    });
+  }
+  document.getElementById('print-invoice-btn').addEventListener('click', () => {
+  // Datos básicos
+  document.getElementById('ticketFecha').textContent = document.getElementById('fechaEmision').value;
+  document.getElementById('ticketHora').textContent = document.getElementById('vendedorHora').value;
+  document.getElementById('ticketEmpresa').textContent = document.getElementById('empresaSesion').value;
+  document.getElementById('ticketVendedor').textContent = document.getElementById('vendedorNombre').value;
+  document.getElementById('ticketCliente').textContent = document.getElementById('nombreCliente').value;
+
+  // Totales
+  document.getElementById('ticketSubtotal').textContent = document.getElementById('subtotal-val').textContent;
+  document.getElementById('ticketIVA').textContent = document.getElementById('iva-val').textContent;
+  document.getElementById('ticketTotal').textContent = document.getElementById('total-val').textContent;
+
+  // Productos
+  const detalle = document.getElementById('products-detail').cloneNode(true);
+  const ticketBody = document.getElementById('ticketProductos');
+  ticketBody.innerHTML = '';
+  detalle.querySelectorAll('tr').forEach(row => {
+    const cells = row.querySelectorAll('td');
+    if (cells.length >= 4) {
+      const tr = document.createElement('tr');
+      for (let i = 0; i < 4; i++) {
+        const td = document.createElement('td');
+        td.textContent = cells[i].textContent;
+        tr.appendChild(td);
+      }
+      ticketBody.appendChild(tr);
+    }
+  });
+
+  // Imprimir
+  window.print();
 });
+});
+});
+
+
 
 
 

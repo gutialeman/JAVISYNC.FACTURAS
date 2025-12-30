@@ -311,7 +311,7 @@ input[type="date"]:focus {
 .forgot-password-container {
     width: 100%;
     display: flex;
-    justify-content: flex-end; /* Lo alinea a la derecha */
+    justify-content: flex-end; 
     margin-top: 01px;
     margin-bottom: 01px;
 }
@@ -325,5 +325,308 @@ input[type="date"]:focus {
 
 .forgot-password-link:hover {
     text-shadow: 0 0 10px #00d2ff; /* Efecto neón al pasar el mouse */
+}
+
+/* Botón de Ajustes Flotante (Superior Derecha) */
+#settings-btn {
+    position: fixed; 
+    top: 20px;
+    right: 20px;
+    z-index: 2000; /* Asegura que esté por encima de formularios y fondos */
+    
+    /* Estilo Neón idéntico a tus botones principales */
+    background-color: #00aaff;
+    box-shadow: 0 0 10px rgba(0, 170, 255, 0.5);
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#settings-btn:hover {
+    background-color: #00e5ff;
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.8);
+    transform: scale(1.05);
+}
+
+/* Menú desplegable de Ajustes */
+#settings-menu {
+    position: fixed;
+    top: 75px;
+    right: 20px;
+    z-index: 9999;
+    background-color: rgba(26, 26, 46, 0.95);
+    border: 1px solid #00aaff;
+    border-radius: 10px;
+    padding: 15px;
+    display: none; /* Se activa mediante JavaScript */
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+}
+
+#settings-menu button {
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid #00aaff;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+#settings-menu button:hover {
+    background-color: #00aaff;
+    box-shadow: 0 0 8px #00e5ff;
+}
+/* ============================================== */
+/* MODAL PARA AJUSTES Y MODAL PARA RECUPERAR      */
+/* ============================================== */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.75);
+    display: none; /* Oculto por defecto */
+    justify-content: center;
+    align-items: center;
+    z-index: 5000; /* Encima de todo */
+    backdrop-filter: blur(3px);
+}
+
+.modal-content {
+    background-color: rgba(26, 26, 46, 0.95);
+    border: 1px solid #00aaff;
+    padding: 25px;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(0, 170, 255, 0.6);
+    animation: modalFade 0.3s ease;
+}
+
+@keyframes modalFade {
+    from { transform: scale(0.9); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+}
+
+/* Botón X de cerrar */
+.modal-close {
+    background-color: #ff3b3b;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    float: right;
+    font-weight: bold;
+    box-shadow: 0 0 10px rgba(255,0,0,0.5);
+}
+
+.modal-close:hover {
+    background-color: #ff6b6b;
+}
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.75);
+  display: none; /* Se activa con JS */
+  justify-content: center;
+  align-items: center;
+  z-index: 5000;
+  backdrop-filter: blur(3px);
+}
+.close-modal {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: transparent;
+  border: none;
+  font-size: 1.8rem;
+  color: #00e5ff;
+  cursor: pointer;
+  transition: transform 0.3s ease, color 0.3s ease;
+  z-index: 10;
+}
+
+.close-modal:hover {
+  transform: scale(1.2);
+  color: #ff4d4d;
+}
+
+/* Asegúrate que el contenedor modal-content tenga position: relative */
+.modal-content {
+  position: relative;
+  padding-top: 50px; /* espacio para la X */
+}
+.password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-wrapper input[type="password"],
+.password-wrapper input[type="text"] {
+  width: 100%;
+  padding-right: 45px; /* espacio para el ícono */
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid #00aaff;
+  color: white;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 1.05em;
+  box-sizing: border-box;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  width: 24px;
+  color: #00e5ff;
+  transition: color 0.3s ease;
+}
+
+.toggle-password:hover {
+  color: #ff4d4d;
+}
+
+.eye-icon {
+  width: 24px;
+  height: 24px;
+}
+.password-wrapper {
+  overflow: hidden;
+}
+.eye-icon {
+  width: 20px;
+  height: 20px;
+}
+/* Asegura que cada grupo de campo esté bien alineado */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+/* Corrige el wrapper del campo de contraseña */
+.password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-wrapper input {
+  width: 100%;
+  padding-right: 45px; /* espacio para el ícono */
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid #00aaff;
+  color: white;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 1.05em;
+  box-sizing: border-box;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 1.2em;
+  color: #00e5ff;
+  transition: color 0.3s ease;
+}
+
+.toggle-password:hover {
+  color: #ff4d4d;
+}
+
+.eye-icon {
+  width: 20px;
+  height: 20px;
+}
+.password-group {
+  position: relative;
+  width: 100%;
+}
+
+.password-group input {
+  width: 100%;
+  padding-right: 40px; /* espacio para el ojo */
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid #00aaff;
+  color: white;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 1.05em;
+  box-sizing: border-box;
+}
+
+.password-group .toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 1.2em;
+  color: #00e5ff;
+  transition: color 0.3s ease;
+}
+
+.password-group .toggle-password:hover {
+  color: #ff4d4d;
+}
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #ticket-factura,
+  #ticket-factura * {
+    visibility: visible;
+  }
+
+  #ticket-factura {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 280px;
+    margin: 0 auto;
+    padding: 0;
+    background: white;
+    color: black;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  #ticket-factura table {
+    border-collapse: collapse;
+  }
+
+  #ticket-factura th,
+  #ticket-factura td {
+    border-bottom: 1px dashed #999;
+    padding: 4px;
+    text-align: left;
+  }
 }
 

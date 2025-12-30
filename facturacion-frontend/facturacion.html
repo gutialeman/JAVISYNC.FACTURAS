@@ -142,6 +142,39 @@
 
         <div class="action-buttons">
             <button id="save-invoice-btn" class="btn btn-primary btn-large">Guardar Factura</button>
+            <div id="ticket-factura" class="hidden">
+  <h2 style="text-align: center;">FACTURACIÓN JAVISYNC</h2>
+
+  <p><strong>Fecha:</strong> <span id="ticketFecha"></span></p>
+  <p><strong>Hora:</strong> <span id="ticketHora"></span></p>
+  <p><strong>Empresa:</strong> <span id="ticketEmpresa"></span></p>
+  <p><strong>Vendedor:</strong> <span id="ticketVendedor"></span></p>
+  <p><strong>Cliente:</strong> <span id="ticketCliente"></span></p>
+
+  <table style="width: 100%; margin-top: 10px; font-size: 12px;">
+    <thead>
+      <tr>
+        <th>Descripción</th>
+        <th>Cant.</th>
+        <th>Precio</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody id="ticketProductos">
+      <!-- Se llenará dinámicamente -->
+    </tbody>
+  </table>
+
+  <div style="margin-top: 10px; text-align: right;">
+    <p><strong>Subtotal:</strong> <span id="ticketSubtotal"></span></p>
+    <p><strong>IVA:</strong> <span id="ticketIVA"></span></p>
+    <p><strong>Total:</strong> <span id="ticketTotal"></span></p>
+  </div>
+
+  <div style="text-align: center; margin-top: 15px;">
+    <img src="qr-code.png" alt="QR Code" style="width: 100px; height: 100px;">
+  </div>
+</div>
             <button id="print-invoice-btn" class="btn btn-primary btn-large print-btn-style">Imprimir Factura</button> 
         </div>
 
